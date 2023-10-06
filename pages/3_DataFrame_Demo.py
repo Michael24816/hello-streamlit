@@ -42,7 +42,7 @@ def data_frame_demo():
 
             data = data.T.reset_index()
             data = pd.melt(data, id_vars=["index"]).rename(
-                columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
+                columns={"index": "year", "value": "(TEST) Gross Agricultural Product ($B)"}
             )
             chart = (
                 alt.Chart(data)
