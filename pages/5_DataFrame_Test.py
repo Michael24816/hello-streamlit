@@ -1,9 +1,5 @@
 import streamlit as st
-from google.cloud import bigquery
-from google.auth.credentials import AnonymousCredentials
-
-# Initialize a BigQuery client with anonymous credentials
-client = bigquery.Client(credentials=AnonymousCredentials(), project="elegant-tendril-395105")
+import pandas_gbq
 
 # Define the SQL query
 QUERY = """
@@ -13,7 +9,7 @@ LIMIT 100
 
 # Fetch data from BigQuery
 def fetch_data(query):
-    return client.query(query).to_dataframe()
+    return pandas_gbq.read_gbq(query, project_id="elegant-tendril-395105", credentials='GOOGLE_APPLICATION_CREDENTIALS', dialect="standard")
 
 # Use Streamlit to display the data
 st.write(fetch_data(QUERY))
