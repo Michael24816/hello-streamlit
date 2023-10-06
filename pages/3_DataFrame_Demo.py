@@ -38,11 +38,11 @@ def data_frame_demo():
         else:
             data = df.loc[countries]
             data /= 1000000.0
-            st.write("### Gross Agricultural Production ($B)", data.sort_index())
+            st.write("### (TEST) Gross Agricultural Production ($B)", data.sort_index())
 
             data = data.T.reset_index()
             data = pd.melt(data, id_vars=["index"]).rename(
-                columns={"index": "year", "value": "(TEST) Gross Agricultural Product ($B)"}
+                columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
             )
             chart = (
                 alt.Chart(data)
