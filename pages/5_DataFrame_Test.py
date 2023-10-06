@@ -1,5 +1,8 @@
 import streamlit as st
-import pandas_gbq
+from google.cloud import bigquery
+
+# Initialize a BigQuery client without specifying credentials
+client = bigquery.Client(project="elegant-tendril-395105", credentials=None)
 
 # Define the SQL query
 QUERY = """
@@ -9,7 +12,7 @@ LIMIT 100
 
 # Fetch data from BigQuery
 def fetch_data(query):
-    return pandas_gbq.read_gbq(query, project_id="elegant-tendril-395105", credentials='GOOGLE_APPLICATION_CREDENTIALS', dialect="standard")
+    return client.query(query).to_dataframe()
 
 # Use Streamlit to display the data
 st.write(fetch_data(QUERY))
