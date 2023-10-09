@@ -44,7 +44,7 @@ skills_df = jobs_all.explode('skills')
 skill_counts = skills_df['skills'].value_counts()
 
 # Convert counts to percentages
-skill_percentages = (skill_counts / len(jobs_all)) * 100
+skill_percentages = (skill_counts / len(jobs_all))
 
 # Reset index for plotting
 skill_percentages = skill_percentages.reset_index()
@@ -60,45 +60,88 @@ jobs_all['via'] = jobs_all['via'].apply(lambda x: x.replace("via ", "") if isins
 st.title("Data Analyst Job Market")
 
 
-# Plot using Altair
-chart = alt.Chart(skill_percentages).mark_bar().encode(
-    x=alt.X('Skill:N', sort='-y', title='Skill'),
-    y=alt.Y('Percentage:Q', title='Percentage of Job Postings (%)'),
+
+
+# Base chart
+base = alt.Chart(skill_percentages).encode(
+    y=alt.Y('Skill:N', sort='-x', title=None),
+    x=alt.X('Percentage:Q', title=None, axis=alt.Axis(format='%', labels=False)),
     tooltip=[
-    alt.Tooltip('Skill:N', title='Skill'), 
-    alt.Tooltip('Percentage:Q', title='Percentage', format='.2f')]
-).properties(
-    title={'text': 'Skills', 'offset': 0},
-    width=800,
-    height = 400
+        alt.Tooltip('Skill:N', title='Skill'), 
+        alt.Tooltip('Percentage:Q', title='Percentage', format='.2%')
+    ]
 )
+
+# Bar chart
+bars = base.mark_bar().properties(
+    title='Most Common Skills',
+    width=800,
+    height=400
+)
+
+# Text labels to the right of bars
+text = base.mark_text(
+    align='left',
+    baseline='middle',
+    dx=3,  # Nudges text to right so it doesn't appear on top of the bar
+    color='white'
+).encode(
+    text=alt.Text('Percentage:Q', format='.2%')
+)
+
+# Combine bar chart and text labels
+chart = (bars + text)
 
 st.altair_chart(chart, use_container_width=True)
 
-# Explode the skills column
-exploded_df = jobs_all.explode('skills')
+
+
 
 # Group by skills and calculate average salary
-avg_salary_by_skill = exploded_df.groupby('skills')['salary_adjusted'].mean().reset_index()
+avg_salary_by_skill = skills_df.groupby('skills')['salary_adjusted'].mean().reset_index()
 
-# Plot using Altair
-chart = alt.Chart(avg_salary_by_skill).mark_bar().encode(
-    x=alt.X('skills:N', sort='-y'),
-    y=alt.Y('salary_adjusted:Q', title='Salary (£ per annum)'),
-    tooltip=[
-        alt.Tooltip('skills:N', title='Skill'), 
-        alt.Tooltip('salary_adjusted:Q', title='Average Salary', format='.0f')
-    ]
+max_salary = avg_salary_by_skill['salary_adjusted'].max()
+adjusted_max = max_salary * 1.10
+
+
+# Get a sorted list of skills from the DataFrame to order the chart
+sorted_skills = avg_salary_by_skill.sort_values(by='salary_adjusted', ascending=False)['skills'].tolist()
+
+base = alt.Chart(avg_salary_by_skill)
+
+bars = base.mark_bar().encode(
+    x=alt.X('salary_adjusted:Q', 
+            title='Salary (£ per annum)', 
+            scale=alt.Scale(domain=(0, adjusted_max))
+           ),
+    y=alt.Y('skills:N', sort=sorted_skills)
 ).properties(
     title='Average Salary by Skill',
-    width= 600,
-    height = 400
+    width=600,
+    height=400
 )
 
+text = base.transform_calculate(
+    salary_with_symbol="'£' + format(datum.salary_adjusted, ',.0f')"
+).mark_text(
+    align = 'left',
+    baseline = 'middle',
+    dx = 3,
+    color = 'white'
+).encode(
+    x=alt.X('salary_adjusted:Q'),
+    y=alt.Y('skills:N', sort=sorted_skills),
+    text='salary_with_symbol:N'
+)
+
+chart = (bars + text)
 st.altair_chart(chart, use_container_width=True)
 
 
-# Use the yearly salary column directly
+
+# Salaries
+
+
 
 salary_df = jobs_all[['title', 'company_name', 'salary_adjusted' ]] # select columns
 salary_df = salary_df[salary_df['salary_adjusted'].notna()]
