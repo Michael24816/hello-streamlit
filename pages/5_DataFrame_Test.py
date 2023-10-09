@@ -59,13 +59,19 @@ jobs_all['via'] = jobs_all['via'].apply(lambda x: x.replace("via ", "") if isins
 
 st.title("Data Analyst Job Market")
 
+max_skill = skill_percentages['Percentage'].max()
+adjusted_percentage_max = max_skill * 1.10
 
 
 
 # Base chart
 base = alt.Chart(skill_percentages).encode(
     y=alt.Y('Skill:N', sort='-x', title=None),
-    x=alt.X('Percentage:Q', title=None, axis=alt.Axis(format='%', labels=False)),
+    x=alt.X('Percentage:Q', 
+            title=None, 
+            axis=alt.Axis(format='%', labels=False),
+            scale=alt.Scale(domain=(0, max_skill))
+            ),
     tooltip=[
         alt.Tooltip('Skill:N', title='Skill'), 
         alt.Tooltip('Percentage:Q', title='Percentage', format='.2%')
