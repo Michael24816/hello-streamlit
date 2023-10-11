@@ -42,7 +42,7 @@ def run():
         - [LinkedIn](https://www.linkedin.com/in/michael-feduk) 
 
     """
-    )
+    , unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
