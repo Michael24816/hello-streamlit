@@ -20,29 +20,27 @@ LOGGER = get_logger(__name__)
 
 def run():
     st.set_page_config(
-        page_title="Hello",
+        page_title="Home",
         page_icon="👋",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+    st.write("# Data Analyst Job Market")
 
-    st.sidebar.success("Select a demo above.")
+    st.sidebar.success("Select a page above.")
 
     st.markdown(
         """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
+        ## Short description of the project  \n
+        The aim of this project is to gain insight into the Data Analyst Job market in London, UK. \n
+        The data used in this project is collected from the Google Jobs platform. \n
+        Data is collected using SerpAPI. \n
+        Data collection and cleaning is automated using Google Cloud Functions and Google Cloud Scheduler. \n
+        Links:\n
+        - [GitHub: Data Pipeline](https://github.com/Michael24816/Data-Analyst-Job-Market-Analysis) \n
+        - [Data](https://storage.googleapis.com/jobs_data_1234/jobs_data.csv)
+        - [GitHub: Website](https://github.com/Michael24816/hello-streamlit)
+        - [LinkedIn](www.linkedin.com/in/michael-feduk) 
+
     """
     )
 

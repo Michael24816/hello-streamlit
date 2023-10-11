@@ -1,5 +1,7 @@
 import pandas as pd
 import streamlit as st
+import numpy as np
+
 
 class DataImport:
     """"
@@ -8,12 +10,31 @@ class DataImport:
     def __init__(self):
         pass
 
-    @st.cache_data(ttl=60*60) # ttl of one hour to keep memory in cache
-    def fetch_and_clean_data():
-        data_url = 'https://storage.googleapis.com/gsearch_share/gsearch_jobs.csv'
-        jobs_data = pd.read_csv(data_url).replace("'","", regex=True)
-        jobs_data.date_time = pd.to_datetime(jobs_data.date_time)
-        jobs_data = jobs_data.drop(labels=['Unnamed: 0', 'index'], axis=1, errors='ignore')
-        jobs_data.description_tokens = jobs_data.description_tokens.str.strip("[]").str.split(",") # fix major formatting issues with tokens
-        jobs_data.description_tokens = jobs_data.description_tokens.apply(lambda row: [x.strip(" ") for x in row]) # remove whitespace from tokens
-        return jobs_data
+    @staticmethod
+    @st.cache_data(ttl=60*60)
+    def get_data():
+        data_url = 'https://storage.googleapis.com/jobs_data_1234/jobs_data.csv'
+        jobs_all = pd.read_csv(data_url)
+
+        columns_to_convert = ['skills_string','extensions_string']
+        for col in columns_to_convert:
+            jobs_all[col] = jobs_all[col].str.split('|')
+
+        jobs_all.rename(columns={'skills_string': 'skills', 'extensions_string': 'extensions'}, inplace=True)
+
+
+        # Remove salaries below £20,000 (below minimum wage - error)
+        jobs_all['salary_adjusted'][jobs_all['salary_adjusted'] < 20000] = np.nan
+
+        # Remove salaries above £500,000 (most likely salary extraction error)
+        jobs_all['salary_adjusted'][jobs_all['salary_adjusted'] > 500000] = np.nan
+
+        # Convert nans to empty lists
+        jobs_all['skills'] = jobs_all['skills'].apply(lambda x: [] if isinstance(x, float) and np.isnan(x) else x)
+        skills = [item for sublist in jobs_all['skills'].tolist() for item in sublist]
+        skills = list(set(skills))
+
+        # Remove the word 'via' from values in the platform column 
+        jobs_all['via'] = jobs_all['via'].apply(lambda x: x.replace("via ", "") if isinstance(x, str) else x)
+
+        return jobs_all

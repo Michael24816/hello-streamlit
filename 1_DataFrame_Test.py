@@ -4,39 +4,22 @@ import numpy as np
 import altair as alt
 import datetime
 #from modules.formater import Title, Footer
-
+from modules.importer import DataImport
 
 # Title page and footer
 title = "💸 Salary"
 #Title().page_config(title)
 #Footer().footer()
 
+
+
 # Import data
-data_url = 'https://storage.googleapis.com/jobs_data_1234/jobs_data.csv'
-jobs_all = pd.read_csv(data_url)
-
-columns_to_convert = ['skills_string','extensions_string']
-for col in columns_to_convert:
-    jobs_all[col] = jobs_all[col].str.split('|')
-
-jobs_all.rename(columns={'skills_string': 'skills', 'extensions_string': 'extensions'}, inplace=True)
+jobs_all = DataImport().get_data()
 
 
-# Remove salaries below £20,000 (below minimum wage - error)
-jobs_all['salary_adjusted'][jobs_all['salary_adjusted'] < 20000] = np.nan
+# Top page build
 
-# Remove salaries above £500,000 (most likely salary extraction error)
-jobs_all['salary_adjusted'][jobs_all['salary_adjusted'] > 500000] = np.nan
-
-# Drop rows without salary data
-jobs_data = jobs_all[jobs_all.salary_adjusted.notna()] 
-
-# Convert nans to empty lists
-jobs_all['skills'] = jobs_all['skills'].apply(lambda x: [] if isinstance(x, float) and np.isnan(x) else x)
-skills = [item for sublist in jobs_all['skills'].tolist() for item in sublist]
-skills = list(set(skills))
-
-
+st.title("Data Analyst Job Market")
 # Flatten the skills column
 skills_df = jobs_all.explode('skills')
 
@@ -49,19 +32,8 @@ skill_percentages = (skill_counts / len(jobs_all))
 # Reset index for plotting
 skill_percentages = skill_percentages.reset_index()
 skill_percentages.columns = ['Skill', 'Percentage']
-
-# Remove the word 'via' from values in the platform column 
-jobs_all['via'] = jobs_all['via'].apply(lambda x: x.replace("via ", "") if isinstance(x, str) else x)
-
-
-
-# Top page build
-
-st.title("Data Analyst Job Market")
-
 max_skill = skill_percentages['Percentage'].max()
 adjusted_percentage_max = max_skill * 1.10
-
 
 
 # Base chart
@@ -113,23 +85,29 @@ adjusted_max = max_salary * 1.10
 # Get a sorted list of skills from the DataFrame to order the chart
 sorted_skills = avg_salary_by_skill.sort_values(by='salary_adjusted', ascending=False)['skills'].tolist()
 
+
+avg_salary_by_skill['salary_with_symbol'] = avg_salary_by_skill['salary_adjusted'].apply(lambda x: f"£{x:,.0f}")
+
 base = alt.Chart(avg_salary_by_skill)
 
 bars = base.mark_bar().encode(
     x=alt.X('salary_adjusted:Q', 
-            title='Salary (£ per annum)', 
+            title=None,
+            axis=alt.Axis(labels=False), 
             scale=alt.Scale(domain=(0, adjusted_max))
            ),
-    y=alt.Y('skills:N', sort=sorted_skills)
+    y=alt.Y('skills:N', sort=sorted_skills, title=None),
+    tooltip=[
+        alt.Tooltip('skills:N', title='Skill'), 
+        alt.Tooltip('salary_with_symbol:N', title='Salary')
+    ]
 ).properties(
     title='Average Salary by Skill',
     width=600,
     height=400
 )
 
-text = base.transform_calculate(
-    salary_with_symbol="'£' + format(datum.salary_adjusted, ',.0f')"
-).mark_text(
+text = base.mark_text(
     align = 'left',
     baseline = 'middle',
     dx = 3,
@@ -144,10 +122,7 @@ chart = (bars + text)
 st.altair_chart(chart, use_container_width=True)
 
 
-
 # Salaries
-
-
 
 salary_df = jobs_all[['title', 'company_name', 'salary_adjusted' ]] # select columns
 salary_df = salary_df[salary_df['salary_adjusted'].notna()]
@@ -155,7 +130,13 @@ salary_df['salary_adjusted'] = salary_df['salary_adjusted'].astype(int)
 
 
 chart_with_titles = alt.Chart(salary_df).mark_bar().encode(
-    x=alt.X('salary_adjusted', title="Salary (£ per annum)", bin=alt.Bin(step=5000)),  # Set the step size for bins
+    #x=alt.X('salary_adjusted', title="Salary (£ per annum)", bin=alt.Bin(step=5000)),  # Set the step size for bins
+    x=alt.X('salary_adjusted', 
+            title="Salary (£ per annum)", 
+            bin=alt.Bin(step=5000)
+            #axis=alt.Axis(format="£,d")  # Format axis labels with £ and commas
+            
+           ),
     y=alt.Y('count()', title="Number of Job Postings")
 ).properties(
     title={'text': 'Salary distribution', 'offset': 0},
@@ -165,6 +146,8 @@ chart_with_titles = alt.Chart(salary_df).mark_bar().encode(
 st.altair_chart(chart_with_titles)
 
 
+
+# Platforms
 
 # Group by platform and count the number of jobs
 platform_counts = jobs_all.groupby('via').size().reset_index(name='counts')
