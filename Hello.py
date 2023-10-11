@@ -39,7 +39,7 @@ def run():
         - [GitHub: Data Pipeline](https://github.com/Michael24816/Data-Analyst-Job-Market-Analysis) \n
         - [Data](https://storage.googleapis.com/jobs_data_1234/jobs_data.csv)
         - [GitHub: Website](https://github.com/Michael24816/hello-streamlit)
-        - [LinkedIn](www.linkedin.com/in/michael-feduk) 
+        - [LinkedIn](https://www.linkedin.com/in/michael-feduk) 
 
     """
     )
