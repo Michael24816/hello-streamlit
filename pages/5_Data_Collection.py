@@ -79,3 +79,5 @@ date_chart = alt.layer(
 )
 
 st.altair_chart(date_chart, use_container_width=True)
+
+print("Note: This project stopped being maintained which is why you will see large gaps in data collection.")
